@@ -1,6 +1,8 @@
+import threading
 from itertools import permutations
 import time
 import multiprocessing
+from watchdog.dog import Watchdog
 
 
 class Timetable:
@@ -12,10 +14,11 @@ class Timetable:
             "Thursday": ["WA", "M", "PIS", "PV", "A", "C", "PSS", None, None, None],
             "Friday": [None, "PIS", "PIS", "A", "TV", "PSS", "PSS", None, None, None]
         }
-
-    def generate_permutations(self):
-        perm = permutations(["M", "DS", "DS", "PSS", "PSS", "A", None, "TV", None, None, "PIS", "M", "PIS", "PIS", "TP", "A", "CJ", None, None, None, "CIT", "CIT", "WA", "DS", "PV", None, "PSS", None, None, None, "AM", "M", "WA", "WA", None, "A", "C", "PIS", "TV", None, "C",   "A", "M", "PV", "PV", "AM", None, None, None, None])
-        return perm
+        self.mon = set(self.get_permutation_monday())
+        self.tue = set(self.get_permutation_tuesday())
+        self.wed = set(self.get_permutation_wednesday())
+        self.thu = set(self.get_permutation_thursday())
+        self.fri = set(self.get_permutation_friday())
 
     def get_permutation_monday(self):
         tmp = list(permutations(self.table["Monday"]))
@@ -37,56 +40,42 @@ class Timetable:
         tmp = list(permutations(self.table["Friday"]))
         return tmp
 
-    def set_table(self):
-        self.table["Monday"] = list(self.get_permutation_monday().pop(0))
-        self.table["Tuesday"] = list(self.get_permutation_tuesday().pop(0))
-        self.table["Wednesday"] = list(self.get_permutation_wednesday().pop(0))
-        self.table["Thursday"] = list(self.get_permutation_thursday().pop(0))
-        self.table["Friday"] = list(self.get_permutation_friday().pop(0))
+    def max(self):
+        tmp = len(self.mon)+len(self.tue)+len(self.wed)+len(self.thu)+len(self.fri)
+        return tmp
 
 
 
-
-
-
-
-t = Timetable()
-
-index = 0
-while True:
-    print(list(t.get_permutation_monday().pop(0)))
-    print(list(t.get_permutation_tuesday().pop(0)))
-    print(list(t.get_permutation_wednesday().pop(0)))
-    print(list(t.get_permutation_thursday().pop(0)))
-    print(list(t.get_permutation_friday().pop(0)))
-    print(index)
-    index+= 1
-
+def main():
+    t = Timetable()
+    print("Pocet rozvrhu: "+str(t.max()**5))  # Return the result instead of printing
 
 
 
 if __name__ == "__main__":
+    watchdog = Watchdog(timeout_seconds=60)
+    watchdog.start()
 
-    start = time.time()
+    p = multiprocessing.Process(target=main)
+    p.start()
+    p.join()
 
-
+    if watchdog.check_timeout():
+        print("Watchdog: Timeout occurred. Terminating the process.")
+    else:
+        print("Watchdog: Task completed within the timeout.")
 
 
 
 """
-# Print original timetable
-print("Puvodni rozvrh:")
-for day in t.table:
-    print(f"{t.table[day]}")
-print("_______________________________________________________________")
-
-index = 0
-while True:
-    t.set_table()
-    for day in t.table:
-        print(f"{t.table[day]}")
-    print(index)
-    index+=1
+    while True:
+        list(t.mon.pop())
+        list(t.tue.pop())
+        list(t.wed.pop())
+        list(t.thu.pop())
+        list(t.fri.pop())
+        print(index)
+        index+= 1
 """
 
 
